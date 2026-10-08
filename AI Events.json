@@ -1,0 +1,276 @@
+{
+  "name": "AI Events",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "aade5949-474a-4de0-a304-d289164a7610",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -224,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=AI+(meetup+OR+workshop)+(Bengaluru+OR+Delhi+OR+Mumbai+OR+Hyderabad+OR+Pune+OR+Chennai)+when:7d&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "6ca2b0e5-3c10-4aca-a043-c93152ad8a69",
+      "name": "RSS Read2",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=AI+(conference+OR+summit+OR+expo)+India+when:7d&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "cc12d721-a44b-4a47-96b8-5b8afd55f113",
+      "name": "RSS Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=AI+hackathon+India+when:7d&hl=en-IN&gl=IN&ceid=IN:en",
+        "options": {}
+      },
+      "id": "19bac254-e213-4f1d-8620-d265a3972ebf",
+      "name": "RSS Read1",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "e231d039-f657-4b28-9986-d9915da897ec",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        592,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "68e74052-febf-4f82-a718-3d3c6d3a113d",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        848,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.data }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a news editor. Write a concise plain-text daily news digest from the articles provided. Group related stories under short topic headings and remove duplicates. For each story, write a clear 2-3 sentence summary in your own words explaining what happened and why it matters. "
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "806ac307-0bbb-4941-bf95-19c01f9d3df3",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1088,
+        432
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.8-flash",
+        "options": {}
+      },
+      "id": "d735c88b-3e3f-49c3-9435-4cabfe9f3366",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1024,
+        640
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "VePxiv1gyQyQtUxD",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "Siddhit.duttagupta@gmail.com",
+        "subject": "NEWS",
+        "emailType": "text",
+        "message": "={{ $json.text }}",
+        "options": {}
+      },
+      "id": "c3b31877-6a5f-4c7d-a6f5-ce649a96ce16",
+      "name": "Send a message",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1488,
+        432
+      ],
+      "webhookId": "ed7a62e7-b7ad-4efd-90b1-ee63d00d4fdf",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ZdKbo4s9WC3eHg5X",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Read2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS Read1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "56b459a8-c113-48ea-9687-a8a828163a63",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "10052686c20b72da2fc949210c3901cb174869903a51547ffef01be713858b82"
+  },
+  "nodeGroups": [],
+  "id": "WixyKnCWzzit5k7K",
+  "tags": []
+}
